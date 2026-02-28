@@ -1,98 +1,143 @@
 import streamlit as st
 import requests
 
-# IMPORTANT: Replace after backend deploy
+# ===============================
+# CONFIG
+# ===============================
 BACKEND_URL = "https://prepai-saas-1.onrender.com"
 
 st.set_page_config(
-    page_title="PrepAI",
+    page_title="PrepAI - AI Interview Coach",
     page_icon="🚀",
     layout="wide"
 )
 
-# Custom Styling
-st.markdown("""
-<style>
-body {
-    background-color: #0E1117;
-}
-.big-title {
-    font-size:50px !important;
-    font-weight:700;
-    color:#4CAF50;
-}
-.card {
-    padding:20px;
-    border-radius:10px;
-    background-color:#1E1E1E;
-    margin-bottom:20px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<p class="big-title">🚀 PrepAI</p>', unsafe_allow_html=True)
-st.caption("Your Personal AI Interview Coach")
-
+# ===============================
+# SIDEBAR NAVIGATION
+# ===============================
 menu = st.sidebar.radio(
     "Navigation",
-    ["🏠 Home", "📝 Register", "🔐 Login", "📄 Resume Analysis"]
+    ["🏠 Home", "📝 Register", "🔒 Login", "📄 Resume Analysis"]
 )
 
-# ---------------- HOME ----------------
+# ===============================
+# HOME PAGE
+# ===============================
 if menu == "🏠 Home":
-    col1, col2, col3 = st.columns(3)
+    st.title("🚀 PrepAI")
+    st.subheader("Your Personal AI Interview Coach")
+    st.write(
+        """
+        Welcome to PrepAI!
+        
+        ✔ Analyze your resume  
+        ✔ Get ATS Score  
+        ✔ Improve your job chances  
+        """
+    )
 
-    with col1:
-        st.markdown('<div class="card">📊 ATS Scoring</div>', unsafe_allow_html=True)
-
-    with col2:
-        st.markdown('<div class="card">🤖 AI Mock Interviews</div>', unsafe_allow_html=True)
-
-    with col3:
-        st.markdown('<div class="card">📈 Skill Gap Analysis</div>', unsafe_allow_html=True)
-
-# ---------------- REGISTER ----------------
+# ===============================
+# REGISTER PAGE
+# ===============================
 elif menu == "📝 Register":
-    st.subheader("Create Account")
+    st.header("📝 Create Account")
 
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
     if st.button("Register"):
-        response = requests.post(
-            f"{BACKEND_URL}/register",
-            json={"email": email, "password": password}
-        )
-        st.success(response.json())
+        if not email or not password:
+            st.warning("Please fill all fields.")
+        else:
+            try:
+                with st.spinner("Creating account..."):
+                    response = requests.post(
+                        f"{BACKEND_URL}/register",
+                        json={"email": email, "password": password},
+                        timeout=30
+                    )
 
-# ---------------- LOGIN ----------------
-elif menu == "🔐 Login":
-    st.subheader("Login")
+                if response.status_code == 200:
+                    st.success("Account created successfully! 🎉")
+                    st.json(response.json())
+                else:
+                    st.error(f"Error: {response.status_code}")
+                    st.write(response.text)
+
+            except requests.exceptions.RequestException as e:
+                st.error("Backend not responding. Try again in a few seconds.")
+                st.write(str(e))
+
+
+# ===============================
+# LOGIN PAGE
+# ===============================
+elif menu == "🔒 Login":
+    st.header("🔒 Login")
 
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        response = requests.post(
-            f"{BACKEND_URL}/login",
-            json={"email": email, "password": password}
-        )
-        st.write(response.json())
+        if not email or not password:
+            st.warning("Please fill all fields.")
+        else:
+            try:
+                with st.spinner("Logging in..."):
+                    response = requests.post(
+                        f"{BACKEND_URL}/login",
+                        json={"email": email, "password": password},
+                        timeout=30
+                    )
 
-# ---------------- RESUME ----------------
+                if response.status_code == 200:
+                    st.success("Login successful! ✅")
+                    data = response.json()
+                    st.session_state["token"] = data.get("access_token")
+                    st.json(data)
+                else:
+                    st.error("Login failed.")
+                    st.write(response.text)
+
+            except requests.exceptions.RequestException as e:
+                st.error("Backend not responding.")
+                st.write(str(e))
+
+
+# ===============================
+# RESUME ANALYSIS PAGE
+# ===============================
 elif menu == "📄 Resume Analysis":
-    st.subheader("Upload Resume")
+    st.header("📄 Resume Analysis")
 
-    file = st.file_uploader("Upload PDF", type=["pdf"])
+    if "token" not in st.session_state:
+        st.warning("Please login first.")
+    else:
+        uploaded_file = st.file_uploader("Upload your resume (PDF)", type=["pdf"])
 
-    if file:
-        if st.button("Analyze Resume"):
-            files = {"file": file}
-            response = requests.post(
-                f"{BACKEND_URL}/upload_resume",
-                files=files
-            )
-            data = response.json()
+        if uploaded_file is not None:
+            try:
+                with st.spinner("Analyzing resume..."):
+                    files = {"file": uploaded_file.getvalue()}
 
-            st.metric("ATS Score", f"{data['ats_score']} / 100")
-            st.success("Resume analyzed successfully!")
+                    headers = {
+                        "Authorization": f"Bearer {st.session_state['token']}"
+                    }
+
+                    response = requests.post(
+                        f"{BACKEND_URL}/upload_resume",
+                        files={"file": uploaded_file},
+                        headers=headers,
+                        timeout=60
+                    )
+
+                if response.status_code == 200:
+                    st.success("Resume analyzed successfully! 🚀")
+                    st.json(response.json())
+                else:
+                    st.error("Analysis failed.")
+                    st.write(response.text)
+
+            except requests.exceptions.RequestException as e:
+                st.error("Backend not responding.")
+                st.write(str(e))
