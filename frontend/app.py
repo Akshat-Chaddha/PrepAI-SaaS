@@ -54,7 +54,7 @@ elif menu == "📝 Register":
                     response = requests.post(
                         f"{BACKEND_URL}/register",
                         json={"email": email, "password": password},
-                        timeout=30
+                        timeout=90
                     )
 
                 if response.status_code == 200:
