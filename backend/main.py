@@ -9,7 +9,9 @@ from database import engine, SessionLocal, Base
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
+@app.get("/")
+def home():
+    return {"message": "PrepAI Backend is Live 🚀"}
 # Dependency
 def get_db():
     db = SessionLocal()
