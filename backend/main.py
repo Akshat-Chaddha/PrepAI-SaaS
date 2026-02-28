@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 import pdfplumber
 import random
 
-from . import models, schemas, auth
-from .database import engine, SessionLocal, Base
+import models, schemas, auth
+from database import engine, SessionLocal, Base
 
 Base.metadata.create_all(bind=engine)
 
