@@ -1,5 +1,5 @@
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from jose import jwt
 from datetime import datetime, timedelta
 import os
 
@@ -7,17 +7,15 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 🔐 Use bcrypt_sha256 (NO 72 BYTE LIMIT ISSUE)
+pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 
 
-# 🔐 SAFE HASH FUNCTION (bcrypt safe)
 def hash_password(password: str):
-    password = password.encode("utf-8")[:72]  # truncate to 72 bytes
     return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str):
-    plain_password = plain_password.encode("utf-8")[:72]
     return pwd_context.verify(plain_password, hashed_password)
 
 
