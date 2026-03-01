@@ -1,7 +1,9 @@
-fastapi
-uvicorn
-sqlalchemy
-passlib
-argon2-cffi
-python-jose
-pydantic
+fastapi==0.110.0
+uvicorn==0.29.0
+sqlalchemy==2.0.27
+pydantic==2.6.1
+python-jose==3.3.0
+passlib==1.7.4
+argon2-cffi==23.1.0
+pdfplumber==0.10.3
+python-multipart==0.0.9
