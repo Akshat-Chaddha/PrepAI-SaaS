@@ -7,8 +7,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-# 🔐 Use bcrypt_sha256 (NO 72 BYTE LIMIT ISSUE)
-pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
+# 🔐 Use ARGON2 (No 72 byte limit issue)
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 def hash_password(password: str):
