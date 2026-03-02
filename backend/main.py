@@ -166,3 +166,6 @@ def get_dashboard(
         "latest_score": latest,
         "history": history
     }
+@app.get("/health")
+def health():
+    return {"status": "ok"}
