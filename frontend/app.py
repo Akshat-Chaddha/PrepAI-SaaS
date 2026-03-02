@@ -270,7 +270,7 @@ st.sidebar.markdown("""
 
 menu = st.sidebar.radio(
     "Navigate",
-    ["🏠 Home", "📝 Register", "🔒 Login", "📄 Resume Analysis"]
+    ["🏠 Home", "📝 Register", "🔒 Login", "📄 Resume Analysis", "📊 Dashboard"]
 )
 
 # Sidebar footer
@@ -1020,3 +1020,41 @@ elif menu == "📄 Resume Analysis":
                 except requests.exceptions.RequestException as e:
                     st.error("⚠️ Backend not responding.")
                     st.write(str(e))
+
+elif menu == "📊 Dashboard":
+
+    st.markdown("## 📊 Your ATS Dashboard")
+
+    # Step 1: Check if user is logged in
+    if "token" not in st.session_state:
+        st.warning("Please login first.")
+    else:
+        # Step 2: Send request to backend
+        headers = {
+            "Authorization": f"Bearer {st.session_state['token']}"
+        }
+
+        response = requests.get(
+            f"{BACKEND_URL}/dashboard",
+            headers=headers
+        )
+
+        # Step 3: If backend success
+        if response.status_code == 200:
+            data = response.json()
+
+            latest_score = data.get("latest_score")
+            history = data.get("history")
+
+            # Step 4: Show latest score
+            if latest_score is not None:
+                st.metric("Latest ATS Score", f"{latest_score} / 100")
+            else:
+                st.info("No resumes uploaded yet.")
+
+            # Step 5: Show score history graph
+            if history:
+                st.line_chart(history)
+
+        else:
+            st.error("Could not fetch dashboard data.")                    

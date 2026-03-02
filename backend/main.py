@@ -45,15 +45,41 @@ def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
         for page in pdf.pages:
             text += page.extract_text()
 
-    ats_score = random.randint(60, 95)
+    from ats_engine import calculate_ats_score
 
-    resume = models.Resume(
-        filename=file.filename,
-        content=text,
-        ats_score=ats_score,
-        user_id=1
-    )
-    db.add(resume)
-    db.commit()
+score, strengths, weaknesses = calculate_ats_score(
+    resume_text,
+    job_description
+)
 
-    return {"filename": file.filename, "ats_score": ats_score}
+new_resume = models.Resume(
+    user_id=current_user.id,
+    ats_score=score,
+    strengths=",".join(strengths),
+    weaknesses=",".join(weaknesses),
+    job_description=job_description,
+    resume_text=resume_text
+)
+
+db.add(new_resume)
+db.commit()
+
+return {
+    "ats_score": score,
+    "strengths": strengths,
+    "weaknesses": weaknesses
+}
+@app.get("/dashboard")
+def get_dashboard(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+
+    resumes = db.query(models.Resume).filter(
+        models.Resume.user_id == current_user.id
+    ).all()
+
+    history = [r.ats_score for r in resumes]
+    latest = history[-1] if history else None
+
+    return {
+        "latest_score": latest,
+        "history": history
+    }
