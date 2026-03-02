@@ -5,7 +5,10 @@ import requests
 # CONFIG
 # ===============================
 BACKEND_URL = "https://prepai-saas-1.onrender.com"
-
+try:
+    requests.get(f"{BACKEND_URL}/health", timeout=10)
+except:
+    pass
 st.set_page_config(
     page_title="PrepAI - AI Interview Coach",
     page_icon="🚀",
