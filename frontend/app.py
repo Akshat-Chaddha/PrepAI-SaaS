@@ -996,7 +996,7 @@ elif menu == "📄 Resume Analysis":
                             f"{BACKEND_URL}/upload_resume",
                             files={"file": uploaded_file},
                             headers=headers,
-                            timeout=120
+                            timeout=300
                         )
 
                     if response.status_code == 200:
