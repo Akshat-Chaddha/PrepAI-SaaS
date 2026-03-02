@@ -5,13 +5,11 @@ import random
 import models
 from database import engine
 
-models.Base.metadata.create_all(bind=engine)
-import models, schemas, auth
-from database import engine, SessionLocal, Base
 
-Base.metadata.create_all(bind=engine)
+
 
 app = FastAPI()
+models.Base.metadata.create_all(bind=engine)
 @app.get("/")
 def home():
     return {"message": "PrepAI Backend is Live 🚀"}
