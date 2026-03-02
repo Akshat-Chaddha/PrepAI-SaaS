@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.getenv(postgresql://prepai_db_wn2m_user:wS9FCPQHg1vCLsyJWRcRNAZfDtT0gGD5@dpg-d6in0aruibrs73ae8mag-a/prepai_db_wn2m)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not set in environment variables")
