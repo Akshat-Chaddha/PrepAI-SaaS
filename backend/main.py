@@ -5,7 +5,10 @@ import models
 import schemas
 import auth
 from database import engine, SessionLocal
-
+from fastapi import Depends
+from jose import JWTError, jwt
+from fastapi.security import OAuth2PasswordBearer
+import auth
 # =========================
 # APP INIT
 # =========================
@@ -85,9 +88,13 @@ def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
 # UPLOAD RESUME
 # =========================
 @app.post("/upload_resume")
-def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
+def upload_resume(
+    file: UploadFile = File(...),
+    job_description: str = "",
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
 
-    # Extract text from PDF
     with pdfplumber.open(file.file) as pdf:
         resume_text = ""
         for page in pdf.pages:
@@ -95,20 +102,15 @@ def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
             if extracted:
                 resume_text += extracted
 
-    # Import ATS engine
     from ats_engine import calculate_ats_score
-
-    # For now using dummy job description
-    job_description = "Software Developer Python FastAPI SQL"
 
     score, strengths, weaknesses = calculate_ats_score(
         resume_text,
         job_description
     )
 
-    # Save resume record (no auth user yet — simple version)
     new_resume = models.Resume(
-        user_id=1,  # temporary (replace with real auth later)
+        user_id=current_user.id,
         ats_score=score,
         strengths=",".join(strengths),
         weaknesses=",".join(weaknesses),
@@ -125,15 +127,36 @@ def upload_resume(file: UploadFile = File(...), db: Session = Depends(get_db)):
         "weaknesses": weaknesses
     }
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    try:
+        payload = jwt.decode(token, auth.SECRET_KEY, algorithms=["HS256"])
+        email: str = payload.get("sub")
+        if email is None:
+            raise HTTPException(status_code=401, detail="Invalid authentication")
+
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    user = db.query(models.User).filter(models.User.email == email).first()
+
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user
 # =========================
 # DASHBOARD
 # =========================
 @app.get("/dashboard")
-def get_dashboard(db: Session = Depends(get_db)):
+def get_dashboard(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
 
     resumes = db.query(models.Resume).filter(
-        models.Resume.user_id == 1  # temporary user
+        models.Resume.user_id == current_user.id
     ).all()
 
     history = [r.ats_score for r in resumes]
