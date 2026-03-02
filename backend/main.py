@@ -2,7 +2,10 @@ from fastapi import FastAPI, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 import pdfplumber
 import random
+import models
+from database import engine
 
+models.Base.metadata.create_all(bind=engine)
 import models, schemas, auth
 from database import engine, SessionLocal, Base
 
