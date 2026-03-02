@@ -804,7 +804,7 @@ elif menu == "📝 Register":
                         response = requests.post(
                             f"{BACKEND_URL}/register",
                             json={"email": email, "password": password},
-                            timeout=90
+                            timeout=120
                         )
 
                     if response.status_code == 200:
@@ -876,7 +876,7 @@ elif menu == "🔒 Login":
                         response = requests.post(
                             f"{BACKEND_URL}/login",
                             json={"email": email, "password": password},
-                            timeout=30
+                            timeout=120
                         )
 
                     if response.status_code == 200:
@@ -993,7 +993,7 @@ elif menu == "📄 Resume Analysis":
                             f"{BACKEND_URL}/upload_resume",
                             files={"file": uploaded_file},
                             headers=headers,
-                            timeout=60
+                            timeout=120
                         )
 
                     if response.status_code == 200:
